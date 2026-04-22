@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataViz AI - 分享图表</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Noto Sans SC', 'Inter', sans-serif; background: #F4F6FA; color: #1A1D23; min-height: 100vh; }
+        
+        .share-header {
+            background: #0F1629;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .share-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .share-logo-icon { font-size: 1.5rem; }
+        .share-badge {
+            background: rgba(45,107,228,0.3);
+            color: #7BA7F7;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        
+        .share-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 24px;
+        }
+        
+        .share-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        
+        .share-card-header {
+            padding: 24px 32px;
+            border-bottom: 1px solid #E2E8F0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .share-chart-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1A1D23;
+        }
+        
+        .share-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 8px;
+        }
+        
+        .share-meta-item {
+            font-size: 0.85rem;
+            color: #64748B;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .share-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.15s;
+        }
+        .btn-primary { background: #2D6BE4; color: #fff; }
+        .btn-primary:hover { background: #2558C7; }
+        .btn-secondary { background: #F4F6FA; color: #1A1D23; border: 1px solid #E2E8F0; }
+        .btn-secondary:hover { background: #E8EDF5; }
+        
+        .share-chart-area {
+            padding: 32px;
+            display: flex;
+            justify-content: center;
+            background: #FAFBFC;
+        }
+        
+        #shareChart {
+            width: 100%;
+            max-width: 900px;
+            height: 500px;
+        }
+        
+        .share-footer {
+            padding: 20px 32px;
+            border-top: 1px solid #E2E8F0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .share-footer-text {
+            font-size: 0.85rem;
+            color: #64748B;
+        }
+        
+        .share-footer-link {
+            color: #2D6BE4;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .share-footer-link:hover { text-decoration: underline; }
+        
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px;
+            gap: 16px;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #E2E8F0;
+            border-top-color: #2D6BE4;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .error-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px;
+            gap: 16px;
+            text-align: center;
+        }
+        
+        .error-icon { font-size: 3rem; }
+        .error-title { font-size: 1.2rem; font-weight: 600; color: #1A1D23; }
+        .error-desc { color: #64748B; font-size: 0.9rem; }
+        
+        .copy-btn {
+            padding: 6px 16px;
+            background: #2D6BE4;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .copy-btn:hover { background: #2558C7; }
+        
+        .url-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #F4F6FA;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
+            padding: 8px 12px;
+            max-width: 400px;
+        }
+        
+        .url-text {
+            flex: 1;
+            font-size: 0.8rem;
+            color: #64748B;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+<header class="share-header">
+    <a href="/" class="share-logo">
+        <span class="share-logo-icon">📊</span>
+        <span>DataViz AI</span>
+    </a>
+    <span class="share-badge">🔗 分享图表</span>
+</header>
+
+<div class="share-container">
+    <div class="share-card" id="shareCard">
+        <!-- 加载状态 -->
+        <div class="loading-state" id="loadingState">
+            <div class="loading-spinner"></div>
+            <div>正在加载图表...</div>
+        </div>
+        
+        <!-- 错误状态 -->
+        <div class="error-state" id="errorState" style="display:none;">
+            <div class="error-icon">😕</div>
+            <div class="error-title">图表不存在</div>
+            <div class="error-desc">该分享链接已失效或图表已被删除</div>
+            <a href="/" class="btn btn-primary" style="margin-top:16px;">返回首页</a>
+        </div>
+        
+        <!-- 图表内容 -->
+        <div id="chartContent" style="display:none;">
+            <div class="share-card-header">
+                <div>
+                    <div class="share-chart-title" id="chartTitle">图表标题</div>
+                    <div class="share-meta">
+                        <span class="share-meta-item">👤 <span id="authorName">作者</span></span>
+                        <span class="share-meta-item">📅 <span id="createDate">创建时间</span></span>
+                        <span class="share-meta-item">📊 <span id="chartType">图表类型</span></span>
+                    </div>
+                </div>
+                <div class="share-actions">
+                    <button class="btn btn-secondary" onclick="copyCurrentUrl()">🔗 复制链接</button>
+                    <a href="/" class="btn btn-primary">✨ 创建我的图表</a>
+                </div>
+            </div>
+            
+            <div class="share-chart-area">
+                <div id="shareChart"></div>
+            </div>
+            
+            <div class="share-footer">
+                <div class="share-footer-text">
+                    由 <a href="/" class="share-footer-link">DataViz AI</a> 创建 · 免费使用数据可视化工具
+                </div>
+                <div class="url-box">
+                    <span class="url-text" id="currentUrl"></span>
+                    <button class="copy-btn" onclick="copyCurrentUrl()">复制</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 获取分享ID
+    const shareId = window.location.pathname.split('/share/')[1];
+    
+    if (!shareId) {
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('errorState').style.display = 'flex';
+    } else {
+        loadSharedChart(shareId);
+    }
+    
+    async function loadSharedChart(id) {
+        try {
+            const response = await fetch(`/api/share/${id}`);
+            
+            if (!response.ok) {
+                throw new Error('图表不存在');
+            }
+            
+            const chart = await response.json();
+            
+            // 更新页面信息
+            document.title = `${chart.title} - DataViz AI`;
+            document.getElementById('chartTitle').textContent = chart.title;
+            document.getElementById('authorName').textContent = chart.author_name || '匿名用户';
+            document.getElementById('createDate').textContent = formatDate(chart.created_at);
+            document.getElementById('chartType').textContent = getChartTypeName(chart.chart_type);
+            document.getElementById('currentUrl').textContent = window.location.href;
+            
+            // 显示图表内容
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('chartContent').style.display = 'block';
+            
+            // 渲染图表
+            setTimeout(() => {
+                const container = document.getElementById('shareChart');
+                const chartInstance = echarts.init(container);
+                
+                const options = typeof chart.options === 'string' 
+                    ? JSON.parse(chart.options) 
+                    : chart.options;
+                
+                // 清理内部属性
+                delete options._width;
+                delete options._height;
+                
+                chartInstance.setOption(options, true);
+                
+                // 响应式
+                window.addEventListener('resize', () => chartInstance.resize());
+            }, 100);
+            
+        } catch (err) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'flex';
+        }
+    }
+    
+    function copyCurrentUrl() {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            alert('链接已复制！');
+        }).catch(() => {
+            const input = document.createElement('input');
+            input.value = window.location.href;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            alert('链接已复制！');
+        });
+    }
+    
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+    
+    function getChartTypeName(type) {
+        const names = {
+            line: '折线图', bar: '柱状图', horizontalBar: '条形图',
+            pie: '饼图', scatter: '散点图', area: '面积图',
+            heatmap: '热力图', radar: '雷达图', boxplot: '箱线图',
+            treemap: '树图', sunburst: '旭日图', parallel: '平行坐标'
+        };
+        return names[type] || type;
+    }
+</script>
+</body>
+</html>
